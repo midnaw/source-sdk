@@ -29,7 +29,6 @@ $Group "game"
 $Group "shaders"
 {
 	"game_shader_generic_example"
-	//"game_shader_generic_std"
 }
 
 $Group "everything"
