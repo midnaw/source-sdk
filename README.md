@@ -4,6 +4,15 @@ This is my personal fork of the multiplayer Source SDK.
 
 ## New Features
 
+### Alien Swarm / Left 4 Dead-Style Glows
+`CBaseAnimating` now has methods for adding glows of various colors.
+
+#### Usage
+```c++
+myEntity->SetGlowEffectColor(1.0, 0.0, 1.0);
+myEntity->AddGlowEffect();
+```
+
 ### Nine-Slice Scaling
 By setting `PaintBackgroundType` on a panel to `3`, you can now utilize [nine-slice scaling](https://en.wikipedia.org/wiki/9-slice_scaling)
 to scale rectangular images while preserving the sizes of corners and sides. This is useful for drawing things like bordered rounded rectangles.
