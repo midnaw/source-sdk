@@ -29,6 +29,11 @@
 #include "tier1/utlsymbol.h"
 #include "vgui_controls/BuildGroup.h"
 
+#define BACKGROUND_MODE_SOLID     0
+#define BACKGROUND_MODE_TEXTURE   1
+#define BACKGROUND_MODE_CORNERS   2
+#define BACKGROUND_MODE_NINESLICE 3
+
 // undefine windows function macros that overlap 
 #ifdef PostMessage
 #undef PostMessage
@@ -521,6 +526,7 @@ public:
 	virtual void DrawTexturedBox( int x, int y, int wide, int tall, Color color, float normalizedAlpha );
 	virtual void DrawBox(int x, int y, int wide, int tall, Color color, float normalizedAlpha, bool hollow = false );
 	virtual void DrawBoxFade(int x, int y, int wide, int tall, Color color, float normalizedAlpha, unsigned int alpha0, unsigned int alpha1, bool bHorizontal, bool hollow = false );
+	virtual void DrawBoxNineSlice(int x, int y, int wide, int tall, Color color);
 	virtual void DrawHollowBox(int x, int y, int wide, int tall, Color color, float normalizedAlpha );
 	//=============================================================================
 	// HPE_BEGIN:
@@ -943,6 +949,12 @@ private:
 	CPanelAnimationVarAliasType( int, m_nBgTextureId2, "Texture2", "vgui/hud/8x800corner2", "textureid" );
 	CPanelAnimationVarAliasType( int, m_nBgTextureId3, "Texture3", "vgui/hud/8x800corner3", "textureid" );
 	CPanelAnimationVarAliasType( int, m_nBgTextureId4, "Texture4", "vgui/hud/8x800corner4", "textureid" );
+	// nine-slice scaling parameters
+	CPanelAnimationVar(int, m_nTextureBorderWeight, "TextureBorderWeight", "6");
+	CPanelAnimationVar(int, m_nTextureBorderX, "TextureBorderX", "0");
+	CPanelAnimationVar(int, m_nTextureBorderY, "TextureBorderY", "0");
+	CPanelAnimationVar(int, m_nTextureBorderW, "TextureBorderWide", "-1");
+	CPanelAnimationVar(int, m_nTextureBorderH, "TextureBorderTall", "-1");
 
 	//=============================================================================
 	// HPE_BEGIN:

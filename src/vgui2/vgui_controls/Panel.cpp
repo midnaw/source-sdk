@@ -1326,29 +1326,21 @@ void Panel::PaintBackground()
 	{
 		Color col = GetBgColor();
 
-		switch ( m_nPaintBackgroundType )
+		switch (m_nPaintBackgroundType)
 		{
 		default:
-		case 0:
-			{
-				surface()->DrawSetColor(col);
-				surface()->DrawFilledRect(0, 0, wide, tall);
-			}
+		case BACKGROUND_MODE_SOLID:
+			surface()->DrawSetColor(col);
+			surface()->DrawFilledRect(0, 0, wide, tall);
 			break;
-		case 1:
-			{
-				DrawTexturedBox( 0, 0, wide, tall, col, 1.0f );
-			}
+		case BACKGROUND_MODE_TEXTURE:
+			DrawTexturedBox(0, 0, wide, tall, col, 1.0f);
 			break;
-		case 2:
-			{
-				DrawBox( 0, 0, wide, tall, col, 1.0f );
-			}
+		case BACKGROUND_MODE_CORNERS:
+			DrawBox(0, 0, wide, tall, col, 1.0f);
 			break;
-		case 3:
-			{
-				DrawBoxFade( 0, 0, wide, tall, col, 1.0f, 255, 0, true );
-			}
+		case BACKGROUND_MODE_NINESLICE:
+			DrawBoxNineSlice(0, 0, wide, tall, col);
 			break;
 		}
 	}
@@ -3783,7 +3775,7 @@ void Panel::SetPaintBackgroundEnabled(bool state)
 void Panel::SetPaintBackgroundType( int type )
 {
 	// HACK only 0 through 2 supported for now
-	m_nPaintBackgroundType = clamp( type, 0, 2 );
+	m_nPaintBackgroundType = type;
 }
 
 void Panel::SetPaintEnabled(bool state)
@@ -6612,6 +6604,162 @@ void Panel::DrawBoxFade(int x, int y, int wide, int tall, Color color, float nor
 		surface()->DrawSetTexture(m_nBgTextureId3);
 		surface()->DrawTexturedRect(x + wide - cornerWide, y + tall - cornerTall, x + wide, y + tall);
 	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: draws a box with nine-slice scaling
+//-----------------------------------------------------------------------------
+void Panel::DrawBoxNineSlice(int x, int y, int wide, int tall, Color color)
+{
+	// very sorry, this code is kind of nasty
+
+	if (m_nBgTextureId1 == -1)
+	{
+		return;
+	}
+	// update texture
+	surface()->DrawSetTexture(m_nBgTextureId1);
+
+	// get texture size
+	int texW, texH;
+	surface()->DrawGetTextureSize(m_nBgTextureId1, texW, texH);
+
+	// area we're actually working in
+	int areaW = m_nTextureBorderW;
+	int areaH = m_nTextureBorderH;
+	// use whole texture if we aren't given values for this
+	if (areaW == -1)
+		areaW = texW;
+	if (areaH == -1)
+		areaH = texH;
+
+	// source corners
+
+	// top left
+	float topLeftSrcS1 = (float)(m_nTextureBorderX) / texW,
+		topLeftSrcT1 = (float)(m_nTextureBorderY) / texH,
+		topLeftSrcS2 = (float)(m_nTextureBorderX + m_nTextureBorderWeight) / texW,
+		topLeftSrcT2 = (float)(m_nTextureBorderY + m_nTextureBorderWeight) / texH;
+	// bottom right
+	float bottomRightSrcS1 = (float)(m_nTextureBorderX + areaW - m_nTextureBorderWeight) / texW,
+		bottomRightSrcT1 = (float)(m_nTextureBorderY + areaH - m_nTextureBorderWeight) / texH,
+		bottomRightSrcS2 = (float)(m_nTextureBorderX + areaW) / texW,
+		bottomRightSrcT2 = (float)(m_nTextureBorderY + areaH) / texH;
+	// top right
+	float topRightSrcS1 = bottomRightSrcS1,
+		topRightSrcT1 = topLeftSrcT1,
+		topRightSrcS2 = bottomRightSrcS2,
+		topRightSrcT2 = topLeftSrcT2;
+	// bottom left
+	float bottomLeftSrcS1 = topLeftSrcS1,
+		bottomLeftSrcT1 = bottomRightSrcT1,
+		bottomLeftSrcS2 = topLeftSrcS2,
+		bottomLeftSrcT2 = bottomRightSrcT2;
+
+	// source center
+	float centerSrcS1 = topLeftSrcS2,
+		centerSrcT1 = topLeftSrcT2,
+		centerSrcS2 = bottomRightSrcS1,
+		centerSrcT2 = bottomRightSrcT1;
+
+	// source sides
+
+	// top side
+	float topSrcS1 = topLeftSrcS2,
+		topSrcT1 = topLeftSrcT1,
+		topSrcS2 = topRightSrcS1,
+		topSrcT2 = topRightSrcT2;
+	// bottom side
+	float bottomSrcS1 = bottomLeftSrcS2,
+		bottomSrcT1 = bottomLeftSrcT1,
+		bottomSrcS2 = bottomRightSrcS1,
+		bottomSrcT2 = bottomRightSrcT2;
+	// left side
+	float leftSrcS1 = topLeftSrcS1,
+		leftSrcT1 = topLeftSrcT2,
+		leftSrcS2 = bottomLeftSrcS2,
+		leftSrcT2 = bottomLeftSrcT1;
+	// right side
+	float rightSrcS1 = topRightSrcS1,
+		rightSrcT1 = topRightSrcT2,
+		rightSrcS2 = bottomRightSrcS2,
+		rightSrcT2 = bottomRightSrcT1;
+
+	// ---
+
+	// destination corners
+
+	// top left
+	int topLeftDestX1 = x,
+		topLeftDestY1 = y,
+		topLeftDestX2 = x + m_nTextureBorderWeight,
+		topLeftDestY2 = y + m_nTextureBorderWeight;
+	// bottom right
+	int bottomRightDestX1 = x + wide - m_nTextureBorderWeight,
+		bottomRightDestY1 = y + tall - m_nTextureBorderWeight,
+		bottomRightDestX2 = x + wide,
+		bottomRightDestY2 = y + tall;
+	// top right
+	int topRightDestX1 = bottomRightDestX1,
+		topRightDestY1 = topLeftDestY1,
+		topRightDestX2 = bottomRightDestX2,
+		topRightDestY2 = topLeftDestY2;
+	// bottom left
+	int bottomLeftDestX1 = topLeftDestX1,
+		bottomLeftDestY1 = bottomRightDestY1,
+		bottomLeftDestX2 = topLeftDestX2,
+		bottomLeftDestY2 = bottomRightDestY2;
+
+	// destination center
+	int centerDestX1 = topLeftDestX2,
+		centerDestY1 = topLeftDestY2,
+		centerDestX2 = bottomRightDestX1,
+		centerDestY2 = bottomRightDestX1;
+
+	// destination sides
+
+	// top side
+	int topDestX1 = topLeftDestX2,
+		topDestY1 = topLeftDestY1,
+		topDestX2 = topRightDestX1,
+		topDestY2 = topRightDestY2;
+	// bottom side
+	int bottomDestX1 = bottomLeftDestX2,
+		bottomDestY1 = bottomLeftDestY1,
+		bottomDestX2 = bottomRightDestX1,
+		bottomDestY2 = bottomRightDestY2;
+	// left side
+	int leftDestX1 = topLeftDestX1,
+		leftDestY1 = topLeftDestY2,
+		leftDestX2 = bottomLeftDestX2,
+		leftDestY2 = bottomLeftDestY1;
+	// right side
+	int rightDestX1 = topRightDestX1,
+		rightDestY1 = topRightDestY2,
+		rightDestX2 = bottomRightDestX2,
+		rightDestY2 = bottomRightDestY1;
+
+	// macro to make the chunk drawing process less nasty
+	#define DRAW_NINESLICE_CHUNK(chunk) \
+		surface()->DrawTexturedSubRect( \
+			##chunk##DestX1, ##chunk##DestY1, ##chunk##DestX2, ##chunk##DestY2, \
+			##chunk##SrcS1, ##chunk##SrcT1, ##chunk##SrcS2, ##chunk##SrcT2 \
+		);
+
+	// corners
+	DRAW_NINESLICE_CHUNK(topLeft);
+	DRAW_NINESLICE_CHUNK(topRight);
+	DRAW_NINESLICE_CHUNK(bottomLeft);
+	DRAW_NINESLICE_CHUNK(bottomRight);
+
+	// center
+	DRAW_NINESLICE_CHUNK(center);
+
+	// sides
+	DRAW_NINESLICE_CHUNK(top);
+	DRAW_NINESLICE_CHUNK(bottom);
+	DRAW_NINESLICE_CHUNK(left);
+	DRAW_NINESLICE_CHUNK(right);
 }
 
 //-----------------------------------------------------------------------------
