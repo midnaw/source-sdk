@@ -171,11 +171,17 @@ public:
 	float	EdgeLimitPoseParameter( int iParameter, float flValue, float flBase = 0.0f );
 
 protected:
+	CNetworkVar(bool, m_bGlowEnabled);
+	CNetworkVar(float, m_flGlowR);
+	CNetworkVar(float, m_flGlowG);
+	CNetworkVar(float, m_flGlowB);
+	CNetworkVar(float, m_flGlowA);
+
+protected:
 	// The modus operandi for pose parameters is that you should not use the const char * version of the functions
 	// in general code -- it causes many many string comparisons, which is slower than you think. Better is to 
 	// save off your pose parameters in member variables in your derivation of this function:
 	virtual void	PopulatePoseParameters( void );
-
 
 public:
 
@@ -292,7 +298,16 @@ public:
 
 	void				UpdateModelScale();
 	virtual	void		RefreshCollisionBounds( void );
-	
+
+	void ReloadGlow(inputdata_t& inputdata);
+	void SetGlowEnabled(inputdata_t& inputdata);
+	void SetGlowDisabled(inputdata_t& inputdata);
+	void SetGlowColorRed(inputdata_t& inputdata);
+	void SetGlowColorGreen(inputdata_t& inputdata);
+	void SetGlowColorBlue(inputdata_t& inputdata);
+	void SetGlowColorAlpha(inputdata_t& inputdata);
+	void SetGlowColor(inputdata_t& inputdata);
+
 	// also calculate IK on server? (always done on client)
 	void EnableServerIK();
 	void DisableServerIK();
@@ -369,6 +384,11 @@ private:
 	bool CanSkipAnimation( void );
 
 public:
+	void SetGlowEffectColor(float r, float g, float b, float a = 1.0f);
+	void AddGlowEffect(void);
+	void RemoveGlowEffect(void);
+	bool IsGlowEffectActive(void);
+
 	void ScriptSetModel( const char *pszModel );
 
 	CNetworkVar( int, m_nForceBone );

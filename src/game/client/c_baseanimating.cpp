@@ -201,7 +201,13 @@ IMPLEMENT_CLIENTCLASS_DT(C_BaseAnimating, DT_BaseAnimating, CBaseAnimating)
 
 	RecvPropFloat( RECVINFO( m_fadeMinDist ) ), 
 	RecvPropFloat( RECVINFO( m_fadeMaxDist ) ), 
-	RecvPropFloat( RECVINFO( m_flFadeScale ) ), 
+	RecvPropFloat( RECVINFO( m_flFadeScale ) ),
+
+	RecvPropBool(RECVINFO(m_bGlowEnabled)),
+	RecvPropFloat(RECVINFO(m_flGlowR)),
+	RecvPropFloat(RECVINFO(m_flGlowG)),
+	RecvPropFloat(RECVINFO(m_flGlowB)),
+	RecvPropFloat(RECVINFO(m_flGlowA)),
 
 END_RECV_TABLE()
 
@@ -745,6 +751,16 @@ C_BaseAnimating::C_BaseAnimating() :
 	Q_memset(&m_mouth, 0, sizeof(m_mouth));
 	m_flCycle = 0;
 	m_flOldCycle = 0;
+
+	// initialize glow stuff
+	m_flGlowR = 0.76f;
+	m_flGlowG = 0.76f;
+	m_flGlowB = 0.76f;
+	m_flGlowA = 1.00f;
+	m_pGlowEffect = NULL;
+	m_bGlowEnabled = false;
+	m_bOldGlowEnabled = false;
+	m_bClientSideGlowEnabled = false;
 }
 
 //-----------------------------------------------------------------------------
@@ -785,6 +801,9 @@ C_BaseAnimating::~C_BaseAnimating()
 		m_pAttachedTo->RemoveBoneAttachment( this );
 		m_pAttachedTo = NULL;
 	}
+
+	// clean up glow
+	DestroyGlowEffect();
 }
 
 bool C_BaseAnimating::UsesPowerOfTwoFrameBufferTexture( void )
@@ -2301,6 +2320,51 @@ void C_BaseAnimating::UpdateOnRemove( void )
 	RemoveFromClientSideAnimationList( true );
 
 	BaseClass::UpdateOnRemove();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void C_BaseAnimating::GetGlowEffectColor(float* r, float* g, float* b, float* a)
+{
+	*r = m_flGlowR;
+	*g = m_flGlowG;
+	*b = m_flGlowB;
+	if (a) // don't dereference nullptr
+		*a = m_flGlowA;
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void C_BaseAnimating::UpdateGlowEffect(void)
+{
+	// destroy the existing effect
+	if (m_pGlowEffect)
+	{
+		DestroyGlowEffect();
+	}
+
+	// create a new effect
+	if (m_bGlowEnabled || m_bClientSideGlowEnabled)
+	{
+		float r, g, b;
+		GetGlowEffectColor(&r, &g, &b);
+
+		m_pGlowEffect = new CGlowObject(this, Vector(r, g, b), 1.0, true);
+	}
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void C_BaseAnimating::DestroyGlowEffect(void)
+{
+	if (m_pGlowEffect)
+	{
+		delete m_pGlowEffect;
+		m_pGlowEffect = NULL;
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -4757,6 +4821,8 @@ void C_BaseAnimating::OnPreDataChanged( DataUpdateType_t updateType )
 {
 	BaseClass::OnPreDataChanged( updateType );
 
+	m_bOldGlowEnabled = m_bGlowEnabled;
+
 	m_bLastClientSideFrameReset = m_bClientSideFrameReset;
 }
 
@@ -4986,8 +5052,6 @@ void C_BaseAnimating::OnDataChanged( DataUpdateType_t updateType )
 		m_nRestoreSequence = -1;
 	}
 
-
-
 	bool modelchanged = false;
 
 	// UNDONE: The base class does this as well.  So this is kind of ugly
@@ -5055,6 +5119,11 @@ void C_BaseAnimating::OnDataChanged( DataUpdateType_t updateType )
 		// Remove ragdoll info
 		delete m_pRagdollInfo;
 		m_pRagdollInfo = NULL;
+	}
+
+	if (m_bOldGlowEnabled != m_bGlowEnabled)
+	{
+		UpdateGlowEffect();
 	}
 }
 

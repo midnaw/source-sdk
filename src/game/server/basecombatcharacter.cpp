@@ -194,9 +194,6 @@ END_SEND_TABLE();
 // This table encodes the CBaseCombatCharacter
 //-----------------------------------------------------------------------------
 IMPLEMENT_SERVERCLASS_ST(CBaseCombatCharacter, DT_BaseCombatCharacter)
-#ifdef GLOWS_ENABLE
-	SendPropBool( SENDINFO( m_bGlowEnabled ) ),
-#endif // GLOWS_ENABLE
 	// Data that only gets sent to the local player.
 	SendPropDataTable( "bcc_localdata", 0, &REFERENCE_SEND_TABLE(DT_BCCLocalPlayerExclusive), SendProxy_SendBaseCombatCharacterLocalDataTable ),
 
@@ -747,10 +744,6 @@ CBaseCombatCharacter::CBaseCombatCharacter( void )
 	m_impactEnergyScale = 1.0f;
 
 	m_bForceServerRagdoll = ai_force_serverside_ragdoll.GetBool();
-
-#ifdef GLOWS_ENABLE
-	m_bGlowEnabled.Set( false );
-#endif // GLOWS_ENABLE
 }
 
 //------------------------------------------------------------------------------
@@ -855,9 +848,7 @@ void CBaseCombatCharacter::UpdateOnRemove( void )
 		SetOwnerEntity( NULL );
 	}
 
-#ifdef GLOWS_ENABLE
 	RemoveGlowEffect();
-#endif // GLOWS_ENABLE
 
 	// Chain at end to mimic destructor unwind order
 	BaseClass::UpdateOnRemove();
@@ -1681,9 +1672,7 @@ void CBaseCombatCharacter::Event_Killed( const CTakeDamageInfo &info )
 	TheNextBots().OnKilled( this, info );
 #endif
 
-#ifdef GLOWS_ENABLE
 	RemoveGlowEffect();
-#endif // GLOWS_ENABLE
 }
 
 void CBaseCombatCharacter::Event_Dying( const CTakeDamageInfo &info )
@@ -3259,33 +3248,6 @@ float CBaseCombatCharacter::GetSpreadBias( CBaseCombatWeapon *pWeapon, CBaseEnti
 	return 1.0;
 }
 
-#ifdef GLOWS_ENABLE
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CBaseCombatCharacter::AddGlowEffect( void )
-{
-	SetTransmitState( FL_EDICT_ALWAYS );
-	m_bGlowEnabled.Set( true );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-void CBaseCombatCharacter::RemoveGlowEffect( void )
-{
-	m_bGlowEnabled.Set( false );
-}
-
-//-----------------------------------------------------------------------------
-// Purpose: 
-//-----------------------------------------------------------------------------
-bool CBaseCombatCharacter::IsGlowEffectActive( void )
-{
-	return m_bGlowEnabled;
-}
-#endif // GLOWS_ENABLE
-
 //-----------------------------------------------------------------------------
 // Assume everyone is average with every weapon. Override this to make exceptions.
 //-----------------------------------------------------------------------------
@@ -3551,9 +3513,7 @@ void CBaseCombatCharacter::ChangeTeam( int iTeamNum )
 	// old team member no longer in the nav mesh
 	ClearLastKnownArea();
 
-#ifdef GLOWS_ENABLE
 	RemoveGlowEffect();
-#endif // GLOWS_ENABLE
 
 	BaseClass::ChangeTeam( iTeamNum );
 }

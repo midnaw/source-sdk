@@ -37,38 +37,19 @@
 #include "hud_vote.h"
 #include "ienginevgui.h"
 #include "sourcevr/isourcevirtualreality.h"
-#if defined( _X360 )
-#include "xbox/xbox_console.h"
-#endif
 
-#if defined( REPLAY_ENABLED )
-#include "replay/replaycamera.h"
-#include "replay/ireplaysystem.h"
-#include "replay/iclientreplaycontext.h"
-#include "replay/ireplaymanager.h"
-#include "replay/replay.h"
-#include "replay/ienginereplay.h"
-#include "replay/vgui/replayreminderpanel.h"
-#include "replay/vgui/replaymessagepanel.h"
-#include "econ/econ_controls.h"
-#include "econ/confirm_dialog.h"
-extern IClientReplayContext *g_pClientReplayContext;
-extern ConVar replay_rendersetting_renderglow;
-#endif
-
-#if defined USES_ECON_ITEMS
-#include "econ_item_view.h"
-#endif
-
-#if defined( TF_CLIENT_DLL )
-#include "tf_gc_client.h"
-#include "c_tf_player.h"
-#include "econ_item_description.h"
-#include "c_tf_team.h"
-#endif
+#include "clienteffectprecachesystem.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
+
+CLIENTEFFECT_REGISTER_BEGIN(PrecachePostProcessingEffectsGlow)
+	CLIENTEFFECT_MATERIAL("dev/glow_downsample")
+	CLIENTEFFECT_MATERIAL("dev/glow_color")
+	CLIENTEFFECT_MATERIAL("dev/glow_blur_x")
+	CLIENTEFFECT_MATERIAL("dev/glow_blur_y")
+	CLIENTEFFECT_MATERIAL("dev/halo_add_to_screen")
+CLIENTEFFECT_REGISTER_END_CONDITIONAL(engine->GetDXSupportLevel() >= 90)
 
 #define ACHIEVEMENT_ANNOUNCEMENT_MIN_TIME 10
 
@@ -803,13 +784,8 @@ int ClientModeShared::HudElementKeyInput( int down, ButtonCode_t keynum, const c
 //-----------------------------------------------------------------------------
 bool ClientModeShared::DoPostScreenSpaceEffects( const CViewSetup *pSetup )
 {
-#if defined( REPLAY_ENABLED )
-	if ( engine->IsPlayingDemo() )
-	{
-		if ( !replay_rendersetting_renderglow.GetBool() )
-			return false;
-	}
-#endif 
+	g_GlowObjectManager.RenderGlowEffects(pSetup, 0);
+
 	return true;
 }
 

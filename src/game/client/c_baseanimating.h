@@ -27,6 +27,8 @@
 #include "tier0/threadtools.h"
 #include "datacache/idatacache.h"
 
+#include "glow_outline_effect.h"
+
 #define LIPSYNC_POSEPARAM_NAME "mouth"
 #define NUM_HITBOX_FIRES	10
 
@@ -450,7 +452,28 @@ public:
 	virtual bool					IsViewModel() const;
 	virtual void					UpdateOnRemove( void );
 
+	CGlowObject* GetGlowObject(void) { return m_pGlowEffect; }
+	virtual void GetGlowEffectColor(float* r, float* g, float* b, float* a = nullptr);
+
+	void SetClientSideGlowEnabled(bool bEnabled) { m_bClientSideGlowEnabled = bEnabled; UpdateGlowEffect(); }
+	bool IsClientSideGlowEnabled(void) { return m_bClientSideGlowEnabled; }
+
 protected:
+	virtual void UpdateGlowEffect(void);
+	virtual void DestroyGlowEffect(void);
+
+private:
+	float m_flGlowR;
+	float m_flGlowG;
+	float m_flGlowB;
+	float m_flGlowA;
+	bool m_bClientSideGlowEnabled;	// client-side only value used for spectator
+	bool m_bGlowEnabled;				// networked value
+	bool m_bOldGlowEnabled;
+	CGlowObject* m_pGlowEffect;
+
+protected:
+
 	// View models scale their attachment positions to account for FOV. To get the unmodified
 	// attachment position (like if you're rendering something else during the view model's DrawModel call),
 	// use TransformViewModelAttachmentToWorld.

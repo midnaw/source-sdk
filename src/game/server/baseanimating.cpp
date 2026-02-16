@@ -197,6 +197,14 @@ BEGIN_DATADESC( CBaseAnimating )
 
  // DEFINE_FIELD( m_boneCacheHandle, memhandle_t ),
 
+	DEFINE_INPUTFUNC(FIELD_VOID, "SetGlowEnabled", SetGlowEnabled),
+	DEFINE_INPUTFUNC(FIELD_VOID, "SetGlowDisabled", SetGlowDisabled),
+	DEFINE_INPUTFUNC(FIELD_FLOAT, "SetGlowColorRed", SetGlowColorRed),
+	DEFINE_INPUTFUNC(FIELD_FLOAT, "SetGlowColorGreen", SetGlowColorGreen),
+	DEFINE_INPUTFUNC(FIELD_FLOAT, "SetGlowColorBlue", SetGlowColorBlue),
+	DEFINE_INPUTFUNC(FIELD_FLOAT, "SetGlowColorAlpha", SetGlowColorAlpha),
+	DEFINE_INPUTFUNC(FIELD_COLOR32, "SetGlowColor", SetGlowColor),
+
 	DEFINE_INPUTFUNC( FIELD_VOID, "Ignite", InputIgnite ),
 	DEFINE_INPUTFUNC( FIELD_FLOAT, "IgniteLifetime", InputIgniteLifetime ),
 	DEFINE_INPUTFUNC( FIELD_INTEGER, "IgniteNumHitboxFires", InputIgniteNumHitboxFires ),
@@ -264,6 +272,11 @@ IMPLEMENT_SERVERCLASS_ST(CBaseAnimating, DT_BaseAnimating)
 	SendPropFloat( SENDINFO( m_fadeMaxDist ), 0, SPROP_NOSCALE ),
 	SendPropFloat( SENDINFO( m_flFadeScale ), 0, SPROP_NOSCALE ),
 
+	SendPropBool(SENDINFO(m_bGlowEnabled)),
+	SendPropFloat(SENDINFO(m_flGlowR)),
+	SendPropFloat(SENDINFO(m_flGlowG)),
+	SendPropFloat(SENDINFO(m_flGlowB)),
+	SendPropFloat(SENDINFO(m_flGlowA)),
 END_SEND_TABLE()
 
 BEGIN_ENT_SCRIPTDESC( CBaseAnimating, CBaseEntity, "Animating models" )
@@ -333,6 +346,12 @@ CBaseAnimating::CBaseAnimating()
 	m_fadeMaxDist = 0;
 	m_flFadeScale = 0.0f;
 	m_fBoneCacheFlags = 0;
+	
+	m_bGlowEnabled.Set(false);
+	m_flGlowR.Set(0.76f);
+	m_flGlowG.Set(0.76f);
+	m_flGlowB.Set(0.76f);
+	m_flGlowA.Set(1.00f);
 }
 
 CBaseAnimating::~CBaseAnimating()
@@ -664,6 +683,30 @@ void CBaseAnimating::InputSetModelScale( inputdata_t &inputdata )
 	inputdata.value.Vector3D( vecScale );
 
 	SetModelScale( vecScale.x, vecScale.y );
+}
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CBaseAnimating::AddGlowEffect( void )
+{
+	SetTransmitState( FL_EDICT_ALWAYS );
+	m_bGlowEnabled.Set( true );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+void CBaseAnimating::RemoveGlowEffect( void )
+{
+	m_bGlowEnabled.Set( false );
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: 
+//-----------------------------------------------------------------------------
+bool CBaseAnimating::IsGlowEffectActive( void )
+{
+	return m_bGlowEnabled;
 }
 
 //-----------------------------------------------------------------------------
@@ -1882,6 +1925,43 @@ inline bool CBaseAnimating::CanSkipAnimation( void )
 	}
 }
 
+void CBaseAnimating::SetGlowEffectColor(float r, float g, float b, float a)
+{
+	m_flGlowR.Set(r);
+	m_flGlowG.Set(g);
+	m_flGlowB.Set(b);
+	m_flGlowA.Set(a);
+}
+
+void CBaseAnimating::SetGlowEnabled(inputdata_t& inputdata)
+{
+	m_bGlowEnabled.Set(true);
+}
+void CBaseAnimating::SetGlowDisabled(inputdata_t& inputdata)
+{
+	m_bGlowEnabled.Set(false);
+}
+void CBaseAnimating::SetGlowColorRed(inputdata_t& inputdata)
+{
+	m_flGlowR.Set(inputdata.value.Float());
+}
+void CBaseAnimating::SetGlowColorGreen(inputdata_t& inputdata)
+{
+	m_flGlowG.Set(inputdata.value.Float());
+}
+void CBaseAnimating::SetGlowColorBlue(inputdata_t& inputdata)
+{
+	m_flGlowB.Set(inputdata.value.Float());
+}
+void CBaseAnimating::SetGlowColorAlpha(inputdata_t& inputdata)
+{
+	m_flGlowA.Set(inputdata.value.Float());
+}
+void CBaseAnimating::SetGlowColor(inputdata_t& inputdata)
+{
+	color32 color = inputdata.value.Color32();
+	SetGlowEffectColor(color.r / 255, color.g / 255, color.b / 255, color.a / 255);
+}
 
 void CBaseAnimating::SetupBones( matrix3x4_t *pBoneToWorld, int boneMask )
 {
