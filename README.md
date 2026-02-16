@@ -1,71 +1,48 @@
-# Source SDK 2013
+# Source SDK 2013 B.C.
 
-Source code for Source SDK 2013.
+This is my personal fork of the multiplayer Source SDK.
 
-Contains the game code for Half-Life 2, HL2: DM and TF2.
+## New Features
 
-**Now including Team Fortress 2! ✨**
+### Nine-Slice Scaling
+By setting `PaintBackgroundType` on a panel to `3`, you can now utilize [nine-slice scaling](https://en.wikipedia.org/wiki/9-slice_scaling)
+to scale rectangular images while preserving the sizes of corners and sides. This is useful for drawing things like bordered rounded rectangles.
 
-## Build instructions
+#### Caveats
+Rendering is currently broken if you attempt to draw a rectangle smaller than 2 times the corner size on either axis. This can be remedied
+by later adding three-slice scaling, but is a minor enough issue that this can wait.
 
-Clone the repository using the following command:
+#### Usage
+Here's an example that changes the health display's background from the standard 4-corners rendering to a complex nine-slice texture.
 
-`git clone https://github.com/ValveSoftware/source-sdk-2013`
-
-### Windows
-
-Requirements:
- - Source SDK 2013 Multiplayer installed via Steam
- - Visual Studio 2022 with the following workload and components:
-   - Desktop development with C++:
-     - MSVC v143 - VS 2022 C++ x64/x86 build tools (Latest)
-     - Windows 11 SDK (10.0.22621.0) or Windows 10 SDK (10.0.19041.1)
- - Python 3.13 or later
-
-Inside the cloned directory, navigate to `src`, run:
-```bat
-createallprojects.bat
 ```
-This will generate the Visual Studio project `everything.sln` which will be used to build your mod.
+HudHealth
+{
+    "fieldName"		"HudHealth"
+    "xpos"	"16"
+    "ypos"	"432"
+		  "wide"	"102"
+		  "tall"  "36"
+		  "visible" "1"
+		  "enabled" "1"
 
-Then, on the menu bar, go to `Build > Build Solution`, and wait for everything to build.
+    // enable nine-slice scaling
+		  "PaintBackgroundType"	"3"
+    // texture that is scaled
+    "Texture1" "vgui/hud/my-texture"
+    // texture dimensions - this assumes your border exists at (0, 0) and is 32x32 pixels
+    // these can be omitted if the whole image is the atlas you want to draw
+    "TextureBorderX" "0"
+    "TextureBorderY" "0"
+    "TextureBorderWide" "32"
+    "TextureBorderTall" "32"
+    // this defines the number of pixels from the edge of the image to not scale
+    // setting this to 4 means 4x4px corners, 4px wide vertical sides, and 4px tall horizontal sides
+    "TextureBorderWeight" "4"
 
-You can then select the `Client (Mod Name)` project you wish to run, right click and select `Set as Startup Project` and hit the big green `> Local Windows Debugger` button on the tool bar in order to launch your mod.
-
-The default launch options should be already filled in for the `Release` configuration.
-
-### Linux
-
-Requirements:
- - Source SDK 2013 Multiplayer installed via Steam
- - podman
-
-Inside the cloned directory, navigate to `src`, run:
-```bash
-./buildallprojects
+		  "text_xpos" "8"
+		  "text_ypos" "20"
+		  "digit_xpos" "50"
+		  "digit_ypos" "2"
+	}
 ```
-
-This will build all the projects related to the SDK and your mods automatically against the Steam Runtime.
-
-You can then, in the root of the cloned directory, you can navigate to `game` and run your mod by launching the build launcher for your mod project, eg:
-```bash
-./mod_tf
-```
-
-*Mods that are distributed on Steam MUST be built against the Steam Runtime, which the above steps will automatically do for you.*
-
-## Distributing your Mod
-
-There is guidance on distributing your mod both on and off Steam available at the following link:
-
-https://partner.steamgames.com/doc/sdk/uploading/distributing_source_engine
-
-## Additional Resources
-
-- [Valve Developer Wiki](https://developer.valvesoftware.com/wiki/Source_SDK_2013)
-
-## License
-
-The SDK is licensed to users on a non-commercial basis under the [SOURCE 1 SDK LICENSE](LICENSE), which is contained in the [LICENSE](LICENSE) file in the root of the repository.
-
-For more information, see [Distributing your Mod](#markdown-header-distributing-your-mod).
